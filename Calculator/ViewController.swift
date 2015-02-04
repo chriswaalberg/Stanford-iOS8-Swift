@@ -42,10 +42,11 @@ class ViewController: UIViewController {
     }
     
     @IBAction func clear() {
-//        enter()
-//        display.text = "0"
-//        history.text = ""
-//        operandStack.removeAll()
+        brain.clear();
+        userIsInTheMiddleOfTypingANumber = false
+        dotShouldBeAppended = false
+        displayValue = 0
+        history.text = ""
     }
     
     @IBAction func operate(sender: UIButton) {
@@ -59,6 +60,7 @@ class ViewController: UIViewController {
                 displayValue = 0 // TODO: Show error by making displayValue into an Optional
             }
         }
+        history.text = "\n".join(brain.history)
     }
     
     @IBAction func enter() {
@@ -69,6 +71,7 @@ class ViewController: UIViewController {
         } else {
             displayValue = 0 // TODO: Show error by making displayValue into an Optional
         }
+        history.text = "\n".join(brain.history)
     }
     
     var displayValue: Double {
