@@ -41,6 +41,15 @@ class ViewController: UIViewController {
         }
     }
     
+    @IBAction func backspace() {
+        if userIsInTheMiddleOfTypingANumber {
+            display.text = dropLast(display.text!)
+            if countElements(display.text!) == 0 {
+                displayValue = 0
+            }
+        }
+    }
+    
     @IBAction func clear() {
         brain.clear();
         userIsInTheMiddleOfTypingANumber = false
