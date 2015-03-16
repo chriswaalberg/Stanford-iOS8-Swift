@@ -8,7 +8,7 @@
 
 import Foundation
 
-class CalculatorBrain {
+class CalculatorBrain: Printable {
     
     private enum Op: Printable {
         case Operand(Double)
@@ -16,6 +16,15 @@ class CalculatorBrain {
         case Constant(String, Double)
         case UnaryOperation(String, Double -> Double)
         case BinaryOperation(String, (Double, Double) -> Double)
+        
+        var isOperation: Bool {
+            switch self {
+            case .UnaryOperation, .BinaryOperation:
+                return true
+            default:
+                return false
+            }
+        }
         
         var description: String {
             get {
@@ -105,7 +114,8 @@ class CalculatorBrain {
     
     func evaluate() -> Double? {
         let (result, remainder) = evaluate(opStack)
-        println("\(opStack) = \(result!) with \(remainder) left over")
+        let resultString = result?.description ?? "nil"
+        println("\(opStack) = \(resultString) with \(remainder) left over")
         return result
     }
     
@@ -149,6 +159,12 @@ class CalculatorBrain {
         }
     }
     
+    var lastOpIsAnOperation: Bool {
+        get {
+            return opStack.count > 0 && opStack[opStack.endIndex - 1].isOperation
+        }
+    }
+    
     private func evaluateDescription(ops: [Op]) -> (result: String?, remainingOps: [Op]) {
         if !ops.isEmpty {
             var descriptionPart = ""
@@ -170,7 +186,11 @@ class CalculatorBrain {
                 remainingOps = evaluated1.remainingOps
                 let evaluated2 = remainingOps.isEmpty ? (result: "?", remainingOps: remainingOps) : evaluateDescription(remainingOps)
                 remainingOps = evaluated2.remainingOps
-                descriptionPart = "\(evaluated2.result!) \(symbol) \(evaluated1.result!)"
+                var evaluated1Result = evaluated1.result!
+                if (symbol == "×" || symbol == "÷") && (evaluated1Result.rangeOfString("+") != nil || evaluated1Result.rangeOfString("-") != nil) {
+                    evaluated1Result = "(" + evaluated1Result + ")"
+                }
+                descriptionPart = "\(evaluated2.result!)\(symbol)\(evaluated1Result)"
             }
             return (descriptionPart, remainingOps)
         }

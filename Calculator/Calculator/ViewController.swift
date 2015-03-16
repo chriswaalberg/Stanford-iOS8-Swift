@@ -24,6 +24,7 @@ class ViewController: UIViewController {
             display.text = digit.rangeOfString(".") != nil ? "0" + digit : digit
             userIsInTheMiddleOfTypingANumber = true
         }
+        updateHistory()
     }
     
     @IBAction func backspace() {
@@ -33,13 +34,14 @@ class ViewController: UIViewController {
                 displayValue = 0
             }
         }
+        updateHistory()
     }
     
     @IBAction func clear() {
         brain.clear();
         userIsInTheMiddleOfTypingANumber = false
         displayValue = 0
-        history.text = ""
+        updateHistory()
     }
     
     @IBAction func operate(sender: UIButton) {
@@ -53,7 +55,7 @@ class ViewController: UIViewController {
                 displayValue = nil
             }
         }
-        history.text = brain.description
+        updateHistory()
     }
     
     @IBAction func enter() {
@@ -63,7 +65,11 @@ class ViewController: UIViewController {
         } else {
             displayValue = nil
         }
-        history.text = brain.description
+        updateHistory()
+    }
+    
+    func updateHistory() {
+        history.text = brain.description + (!userIsInTheMiddleOfTypingANumber && brain.lastOpIsAnOperation ? "=" : "")
     }
     
     var displayValue: Double? {

@@ -14,11 +14,11 @@
 		<string>github.com:chriswaalberg/Stanford-iOS8-Swift.git</string>
 	</dict>
 	<key>IDESourceControlProjectPath</key>
-	<string>Calculator.xcodeproj</string>
+	<string>Calculator/Calculator.xcodeproj</string>
 	<key>IDESourceControlProjectRelativeInstallPathDictionary</key>
 	<dict>
 		<key>1B10479F715E59EEE340B88C31C7C79DE4D51CB6</key>
-		<string>../..</string>
+		<string>../../..</string>
 	</dict>
 	<key>IDESourceControlProjectURL</key>
 	<string>github.com:chriswaalberg/Stanford-iOS8-Swift.git</string>
@@ -34,7 +34,7 @@
 			<key>IDESourceControlWCCIdentifierKey</key>
 			<string>1B10479F715E59EEE340B88C31C7C79DE4D51CB6</string>
 			<key>IDESourceControlWCCName</key>
-			<string>Calculator</string>
+			<string>Stanford</string>
 		</dict>
 	</array>
 </dict>
