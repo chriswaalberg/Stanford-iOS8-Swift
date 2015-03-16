@@ -12,6 +12,8 @@ class CalculatorBrain {
     
     private enum Op: Printable {
         case Operand(Double)
+        case Variable(String)
+        case Constant(String, Double)
         case UnaryOperation(String, Double -> Double)
         case BinaryOperation(String, (Double, Double) -> Double)
         
@@ -20,6 +22,10 @@ class CalculatorBrain {
                 switch self {
                 case .Operand(let operand):
                     return "\(operand)"
+                case .Variable(let symbol):
+                    return symbol
+                case .Constant(let symbol, _):
+                    return symbol
                 case .UnaryOperation(let symbol, _):
                     return symbol
                 case .BinaryOperation(let symbol, _):
@@ -31,13 +37,6 @@ class CalculatorBrain {
     
     private var opStack = [Op]()
     
-    private var _history = [String]()
-    var history: [String] {
-        get {
-            return _history
-        }
-    }
-    
     private var knownOps = [String:Op]()
     
     init() {
@@ -48,21 +47,46 @@ class CalculatorBrain {
         knownOps["√"] = Op.UnaryOperation("√", sqrt)
         knownOps["sin"] = Op.UnaryOperation("sin", sin)
         knownOps["cos"] = Op.UnaryOperation("cos", cos)
-        knownOps["π"] = Op.Operand(M_PI)
+        knownOps["π"] = Op.Constant("π", M_PI)
     }
     
-    private func evaluate(ops: [Op]) -> (result: Double?, remainingOps: [Op]){
+    typealias PropertyList = AnyObject
+    var program: PropertyList {
+        get {
+            return opStack.map { $0.description }
+        }
+        set {
+            if let opSymbols = newValue as? Array<String> {
+                var newOpStack = [Op]()
+                for opSymbol in opSymbols {
+                    if let op = knownOps[opSymbol] {
+                        newOpStack.append(op)
+                    } else if let operand = NSNumberFormatter().numberFromString(opSymbol)?.doubleValue {
+                        newOpStack.append(.Operand(operand))
+                    }
+                }
+                opStack = newOpStack
+            }
+        }
+    }
+    
+    private func evaluate(ops: [Op]) -> (result: Double?, remainingOps: [Op]) {
         if !ops.isEmpty {
             var remainingOps = ops;
             let op = remainingOps.removeLast()
             switch op {
             case .Operand(let operand):
                 return (operand, remainingOps)
+            case .Variable(let symbol):
+                if let operand = variableValues[symbol] {
+                    return (operand, remainingOps)
+                }
+            case .Constant(_, let operand):
+                return (operand, remainingOps)
             case .UnaryOperation(_, let operation):
                 let operandEvaluation = evaluate(remainingOps)
                 if let operand = operandEvaluation.result {
                     var result = operation(operand)
-                    _history.append("\(result)")
                     return (result, operandEvaluation.remainingOps)
                 }
             case .BinaryOperation(_, let operation):
@@ -71,7 +95,6 @@ class CalculatorBrain {
                     let operand2Evaluation = evaluate(operand1Evaluation.remainingOps)
                     if let operand2 = operand2Evaluation.result {
                         var result = operation(operand1, operand2)
-                        _history.append("\(result)")
                         return (result, operand2Evaluation.remainingOps)
                     }
                 }
@@ -82,27 +105,75 @@ class CalculatorBrain {
     
     func evaluate() -> Double? {
         let (result, remainder) = evaluate(opStack)
-        println("\(opStack) = \(result) with \(remainder) left over")
+        println("\(opStack) = \(result!) with \(remainder) left over")
         return result
     }
     
     func pushOperand(operand: Double) -> Double? {
-        var op = Op.Operand(operand)
+        let op = Op.Operand(operand)
         opStack.append(op)
-        _history.append("\(op)")
         return evaluate()
     }
+    
+    func pushOperand(symbol: String) -> Double? {
+        let variable = Op.Variable(symbol)
+        opStack.append(variable)
+        return evaluate()
+    }
+    
+    var variableValues = Dictionary<String, Double>()
     
     func performOperation(symbol: String) -> Double? {
         if let operation = knownOps[symbol] {
             opStack.append(operation)
-            _history.append("\(operation)")
         }
         return evaluate()
     }
     
     func clear() {
         opStack = [Op]()
-        _history = [String]()
+    }
+    
+    var description: String {
+        get {
+            var description: String? = nil
+            var remainingOps = opStack
+            while (!remainingOps.isEmpty) {
+                let (result, remainder) = evaluateDescription(remainingOps)
+                if (result != nil) {
+                    description = description != nil ? "\(result!), \(description!)" : "\(result!)"
+                }
+                remainingOps = remainder
+            }
+            return description != nil ? description! : ""
+        }
+    }
+    
+    private func evaluateDescription(ops: [Op]) -> (result: String?, remainingOps: [Op]) {
+        if !ops.isEmpty {
+            var descriptionPart = ""
+            var remainingOps = ops;
+            let op = remainingOps.removeLast()
+            switch op {
+            case .Operand(let operand):
+                descriptionPart = "\(operand)"
+            case .Variable(let symbol):
+                descriptionPart = "\(symbol)"
+            case .Constant(let symbol, _):
+                descriptionPart = "\(symbol)"
+            case .UnaryOperation(let symbol, _):
+                let evaluated = remainingOps.isEmpty ? (result: "?", remainingOps: remainingOps) : evaluateDescription(remainingOps)
+                remainingOps = evaluated.remainingOps
+                descriptionPart = "\(symbol)(\(evaluated.result!))"
+            case .BinaryOperation(let symbol, _):
+                let evaluated1 = remainingOps.isEmpty ? (result: "?", remainingOps: remainingOps) : evaluateDescription(remainingOps)
+                remainingOps = evaluated1.remainingOps
+                let evaluated2 = remainingOps.isEmpty ? (result: "?", remainingOps: remainingOps) : evaluateDescription(remainingOps)
+                remainingOps = evaluated2.remainingOps
+                descriptionPart = "\(evaluated2.result!) \(symbol) \(evaluated1.result!)"
+            }
+            return (descriptionPart, remainingOps)
+        }
+        return (nil, ops)
     }
 }

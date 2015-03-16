@@ -21,10 +21,7 @@ class ViewController: UIViewController {
         if userIsInTheMiddleOfTypingANumber {
             display.text = display.text! + digit
         } else {
-            if digit.rangeOfString(".") != nil {
-                digit = "0" + digit
-            }
-            display.text = digit
+            display.text = digit.rangeOfString(".") != nil ? "0" + digit : digit
             userIsInTheMiddleOfTypingANumber = true
         }
     }
@@ -53,28 +50,31 @@ class ViewController: UIViewController {
             if let result = brain.performOperation(operation) {
                 displayValue = result
             } else {
-                displayValue = 0 // TODO: Show error by making displayValue into an Optional
+                displayValue = nil
             }
         }
-        history.text = "\n".join(brain.history)
+        history.text = brain.description
     }
     
     @IBAction func enter() {
         userIsInTheMiddleOfTypingANumber = false
-        if let result = brain.pushOperand(displayValue) {
+        if let result = brain.pushOperand(displayValue!) {
             displayValue = result
         } else {
-            displayValue = 0 // TODO: Show error by making displayValue into an Optional
+            displayValue = nil
         }
-        history.text = "\n".join(brain.history)
+        history.text = brain.description
     }
     
-    var displayValue: Double {
+    var displayValue: Double? {
         get {
-            return NSNumberFormatter().numberFromString(display.text!)!.doubleValue
+            if let displayValueAsDouble = NSNumberFormatter().numberFromString(display.text!)?.doubleValue {
+                return displayValueAsDouble
+            }
+            return nil
         }
         set {
-            display.text = "\(newValue)"
+            display.text = newValue != nil ? "\(newValue!)" : " " // Show error?
             userIsInTheMiddleOfTypingANumber = false
         }
     }
