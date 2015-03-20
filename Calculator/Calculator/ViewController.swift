@@ -68,7 +68,35 @@ class ViewController: UIViewController {
         updateHistory()
     }
     
+    // TODO Is deels een kopie van enter(). Samenvoegen?
+    @IBAction func setM() {
+        if displayValue != nil {
+            userIsInTheMiddleOfTypingANumber = false
+            brain.variableValues["M"] = displayValue
+            if let result = brain.evaluate() {
+                displayValue = result
+            } else {
+                displayValue = nil
+            }
+            updateHistory()
+        }
+    }
+    
+    // TODO Is deels een kopie van enter(). Samenvoegen?
+    @IBAction func pushM() {
+        if userIsInTheMiddleOfTypingANumber {
+            enter()
+        }
+        if let result = brain.pushOperand("M") {
+            displayValue = result
+        } else {
+            displayValue = nil
+        }
+        updateHistory()
+    }
+    
     func updateHistory() {
+        // Zou eventueel ook zonder brain.lastOpIsAnOperation kunnen
         history.text = brain.description + (!userIsInTheMiddleOfTypingANumber && brain.lastOpIsAnOperation ? "=" : "")
     }
     

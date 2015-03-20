@@ -142,6 +142,7 @@ class CalculatorBrain: Printable {
     
     func clear() {
         opStack = [Op]()
+        variableValues = Dictionary<String, Double>()
     }
     
     var description: String {
